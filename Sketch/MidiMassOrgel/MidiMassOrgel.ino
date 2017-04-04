@@ -22,15 +22,16 @@ const char* NOTE_NAMES[12] = {"C ", "C#", "D ", "D#", "E ", "F ", "F#", "G ", "G
 /*
   Servos
 */
+#define LED_PIN 13        // 
 #define SERVO_START_PIN 6 // first pin for the servos
-#define SERVO_COUNT 8     // number of servos equates number of notes
+#define SERVO_COUNT 7     // number of servos equates number of notes
 
-Servo pipeServos[8];      // array of servo objects
+Servo pipeServos[7];      // array of servo objects
 
 // with 8 pipes the organ can not play all notes
 // this setting is C-Dur, only whole steps
 // 42 will be ingnored by the servo functions
-const int NOTE_PIPES[12] = { 0, 42, 1, 42, 2, 3, 42, 4, 42, 5, 42, 6 };
+const int NOTE_PIPES[12] = { 5, 42, 6, 42, 0, 1, 42, 2, 42, 3, 42, 4 };
 
 
 /*
@@ -187,7 +188,7 @@ void servosTest() {
   for (int s = 0; s < SERVO_COUNT; s++)
   {
     openPipe(s);
-    delay(100);
+    delay(3000);
   }
   delay(500);
 
@@ -202,17 +203,33 @@ void servosTest() {
 
 // helper function to open pipe
 void openPipe(int servoNumber) {
-  Serial.print("Opening pipe "); Serial.println(servoNumber);
   if (servoNumber < SERVO_COUNT) {
+    digitalWrite(LED_PIN, HIGH);
+    
+    pipeServos[servoNumber].attach(servoNumber + SERVO_START_PIN);
     pipeServos[servoNumber].write(90);
+    delay(500);
+    
+    Serial.print("Opening pipe "); Serial.println(servoNumber);
+  }
+  else{
+    Serial.print("Opening pipe: invalide pipe");
   }
 }
 
 // helper function to close pipe
 void closePipe(int servoNumber) {
-  Serial.print("Closing pipe "); Serial.println(servoNumber);
   if (servoNumber < SERVO_COUNT) {
+    digitalWrite(LED_PIN, LOW);
+    
     pipeServos[servoNumber].write(0);
+    Serial.print("Closing pipe: "); Serial.println(servoNumber);
+
+    delay(500);
+    pipeServos[servoNumber].detach();
+  }
+  else {
+    Serial.print("Closing pipe: invalide pipe");
   }
 }
 
@@ -221,10 +238,11 @@ void closePipe(int servoNumber) {
    Arduino setup() and loop()
 */
 void setup() {
-
+  
   midi_init();  // Start MIDI
 
-  servosInit();
+  pinMode(LED_PIN, OUTPUT);
+//  servosInit();
 
   Serial.begin(9600);
 
