@@ -30,6 +30,7 @@ Servo pipeServos[7];      // array of servo objects
 
 // with 8 pipes the organ can not play all notes
 // this setting is C-Dur, only whole steps
+// a empty beer bottle has the E note
 // 42 will be ingnored by the servo functions
 const int NOTE_PIPES[12] = { 5, 42, 6, 42, 0, 1, 42, 2, 42, 3, 42, 4 };
 
@@ -47,10 +48,8 @@ void midiTest() {
     int n = 12 * 4 + i;
     Serial.print("Playing "); Serial.println(n);
     midi_noteOn(0, n, 100);
-    on_midi_noteOn(0, n, 100);
     delay(400);
     midi_noteOff(0, n, 0);
-    on_midi_noteOff(0, n, 0);
   }
 }
 
@@ -169,12 +168,6 @@ void on_midi_noteOff(uint8_t midi_chn, uint8_t midi_note, uint8_t midi_velocity)
 /*
    Functions to handle the servos
 */
-void servosInit() {
-  for (int i = 0; i < SERVO_COUNT; i++)
-  {
-    pipeServos[i].attach(i + SERVO_START_PIN);
-  }
-}
 
 // test function to check if all servos are working, called in setup()
 void servosTest() {
@@ -184,26 +177,34 @@ void servosTest() {
     closePipe(s);
   }
 
-  // 2. open pipes one by one
+  // 2. open and close pipes one by one
   for (int s = 0; s < SERVO_COUNT; s++)
   {
     openPipe(s);
-    delay(3000);
+    delay(1000);
+    closePipe(s);
   }
-  delay(500);
+  
+  // 3. open all pipes one by one
+  for (int s = 0; s < SERVO_COUNT; s++)
+  {
+    openPipe(s);
+    delay(1000);
+  }
 
-  // 3. pipes closed one by one
+  // 4. close all pipesby one
   for (int s = 0; s < SERVO_COUNT; s++)
   {
     closePipe(s);
-    delay(100);
+    delay(1000);
   }
-  delay(500);
+  
+  delay(1000);
 }
 
 // helper function to open pipe
 void openPipe(int servoNumber) {
-  if (servoNumber < SERVO_COUNT) {
+  if (servoNumber >= 0 && servoNumber < SERVO_COUNT) {
     digitalWrite(LED_PIN, HIGH);
     
     pipeServos[servoNumber].attach(servoNumber + SERVO_START_PIN);
@@ -219,7 +220,7 @@ void openPipe(int servoNumber) {
 
 // helper function to close pipe
 void closePipe(int servoNumber) {
-  if (servoNumber < SERVO_COUNT) {
+  if (servoNumber >= 0 && servoNumber < SERVO_COUNT) {
     digitalWrite(LED_PIN, LOW);
     
     pipeServos[servoNumber].write(0);
@@ -242,7 +243,6 @@ void setup() {
   midi_init();  // Start MIDI
 
   pinMode(LED_PIN, OUTPUT);
-//  servosInit();
 
   Serial.begin(9600);
 
